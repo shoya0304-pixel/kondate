@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <title>レシピ | 献立コンシェルジュ</title>
+  <link rel="stylesheet" href="style.css"/>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon.svg" />
+  <style>
+    .recipe-hero-header {
+      background: linear-gradient(140deg, var(--accent) 0%, #e07040 60%, #c85820 100%);
+      color: #fff;
+      padding: 20px 16px 18px;
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      position: relative; overflow: hidden;
+    }
+    .recipe-hero-header::after {
+      content:""; position:absolute; top:-30px; right:-30px;
+      width:120px; height:120px;
+      background:rgba(255,255,255,0.08); border-radius:50%;
+    }
+    .recipe-title {
+      font-family: var(--font-serif); font-size: 22px; font-weight: 700;
+      line-height: 1.3; margin-bottom: 10px;
+    }
+    .recipe-chips { display:flex; flex-wrap:wrap; gap:6px; }
+    .recipe-chip {
+      padding:4px 11px; border-radius:999px; font-size:11px; font-weight:600;
+      background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.3);
+    }
+    .recipe-body-wrap {
+      background: #fff;
+      border: 1px solid var(--border); border-top: none;
+      border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+      padding: 16px;
+    }
+
+    /* 栄養サマリー */
+    .nutrition-card {
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 14px; margin-bottom: 14px;
+    }
+    .nutrition-title {
+      font-size: 12px; font-weight: 700; color: var(--ink-3);
+      text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px;
+    }
+    .nutrition-row {
+      display: grid; grid-template-columns: repeat(4,1fr); gap: 8px;
+      margin-bottom: 12px;
+    }
+    .nutrition-item { text-align:center; }
+    .nutrition-val {
+      font-family: var(--font-serif); font-size: 18px; font-weight: 700; color: var(--accent);
+    }
+    .nutrition-label { font-size: 10px; color: var(--ink-3); margin-top: 2px; }
+    .pfc-mini { display:grid; gap:6px; }
+    .pfc-mini-row { display:flex; align-items:center; gap:8px; font-size:11px; }
+    .pfc-mini-label { width:60px; color:var(--ink-3); flex-shrink:0; }
+    .pfc-mini-bar-track { flex:1; height:5px; background:rgba(0,0,0,0.07); border-radius:999px; overflow:hidden; }
+    .pfc-mini-bar-fill { height:100%; border-radius:999px; transition:width 0.6s cubic-bezier(0.34,1.56,0.64,1); }
+    .pfc-mini-nums { font-size:10px; color:var(--ink-3); white-space:nowrap; }
+
+    /* おすすめ副菜 */
+    .suggest-card {
+      background: linear-gradient(140deg, #f0f7f4, #e8f4ec);
+      border: 1px solid rgba(42,96,72,0.2);
+      border-radius: var(--radius-sm); padding: 13px; margin-bottom: 14px;
+    }
+    .suggest-title {
+      font-family: var(--font-serif); font-size: 13px; font-weight: 600;
+      color: var(--accent-2); margin-bottom: 8px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .suggest-list { display:grid; gap:6px; }
+    .suggest-item {
+      background: rgba(255,255,255,0.8); border-radius: 8px;
+      padding: 9px 11px; font-size: 13px;
+      border: 1px solid rgba(42,96,72,0.12);
+    }
+    .suggest-item-name { font-weight: 600; color: var(--ink); margin-bottom:2px; }
+    .suggest-item-reason { font-size: 11px; color: var(--accent-2); }
+    .suggest-loading {
+      display:flex; align-items:center; gap:8px;
+      font-size:13px; color:var(--accent-2); padding:8px 0;
+    }
+
+    /* アクションボタン */
+    .action-bar {
+      position:sticky; bottom: var(--nav-h);
+      background:rgba(245,240,232,0.96);
+      backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+      border-top:1px solid var(--border);
+      padding:10px 16px; margin:0 -16px;
+      display:flex; gap:9px; z-index:50;
+    }
+    .action-bar .btn-cook { flex:1; }
+
+    /* モーダルUI */
+    .modal-overlay {
+      display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-content {
+      background: var(--surface); border-radius: var(--radius); width: 100%; max-width: 500px;
+      max-height: 85vh; overflow-y: auto; padding: 20px; position: relative;
+    }
+    .modal-close {
+      position: absolute; top: 12px; right: 12px;
+      background: var(--surface-2); border: none; width: 30px; height: 30px; border-radius: 50%;
+      font-size: 16px; cursor: pointer; color: var(--ink-2);
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo">📋</div>
+    <div>
+      <div class="brand-title">レシピ詳細</div>
+      <div class="brand-sub">材料・手順・栄養と副菜提案</div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- レシピヘッダー -->
+  <div id="recipeWrap" style="margin-bottom:14px;">
+    <div class="recipe-hero-header fade-in" id="recipeHeaderEl">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+        <div class="recipe-title" id="selectedTitle">レシピを読み込み中…</div>
+        <div style="display:flex; gap:6px; flex-shrink:0; align-items:center;">
+          <select id="servingsSelect" class="select" style="padding:4px 24px 4px 10px; font-size:12px; height:auto; background-color:rgba(255,255,255,0.9);">
+            <option value="1">1人前</option>
+            <option value="2">2人前</option>
+            <option value="3">3人前</option>
+            <option value="4">4人前</option>
+            <option value="5">5人前</option>
+            <option value="6">6人前</option>
+          </select>
+          <button class="btn ghost" id="printBtn" type="button" style="padding:4px 10px; font-size:12px; background:rgba(255,255,255,0.2); border-color:rgba(255,255,255,0.4); color:#fff;">🖨️ 印刷</button>
+        </div>
+      </div>
+      <div class="recipe-chips" id="recipeMetaChips"></div>
+    </div>
+    <div class="recipe-body-wrap fade-in" id="recipeDetail">
+      <div class="empty">
+        <div class="empty-icon">🍽️</div>
+        <div class="empty-text">献立ページからレシピを選んでください</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 栄養サマリー（レシピ選択後に表示） -->
+  <div id="nutritionSection" style="display:none;">
+    <div class="nutrition-card fade-in">
+      <div class="nutrition-title">📊 この料理の栄養（1食分）</div>
+      <div class="nutrition-row">
+        <div class="nutrition-item">
+          <div class="nutrition-val" id="recipeKcal">--</div>
+          <div class="nutrition-label">kcal</div>
+        </div>
+        <div class="nutrition-item">
+          <div class="nutrition-val" id="recipeP" style="color:var(--accent);">--</div>
+          <div class="nutrition-label">たんぱく質g</div>
+        </div>
+        <div class="nutrition-item">
+          <div class="nutrition-val" id="recipeF" style="color:var(--gold);">--</div>
+          <div class="nutrition-label">脂質g</div>
+        </div>
+        <div class="nutrition-item">
+          <div class="nutrition-val" id="recipeC" style="color:var(--accent-2);">--</div>
+          <div class="nutrition-label">炭水化物g</div>
+        </div>
+      </div>
+      
+      <!-- 追加の栄養項目 -->
+      <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom:14px; padding: 10px; background: rgba(0,0,0,0.03); border-radius: 8px; font-size: 11px;">
+        <div style="display:flex; justify-content:space-between;"><span>🥕 ビタミン:</span> <strong id="recipeVit">--</strong></div>
+        <div style="display:flex; justify-content:space-between;"><span>🥗 食物繊維:</span> <strong id="recipeFiber">--</strong>g</div>
+        <div style="display:flex; justify-content:space-between;"><span>⛓️ 鉄分:</span> <strong id="recipeIron">--</strong>mg</div>
+        <div style="display:flex; justify-content:space-between;"><span>🧂 塩分:</span> <strong id="recipeSalt">--</strong>g</div>
+      </div>
+
+      <div class="pfc-mini" id="pfcMini"></div>
+    </div>
+
+    <!-- おすすめ副菜・汁物 -->
+    <div class="suggest-card fade-in" id="suggestSection">
+      <div class="suggest-title">
+        🥗 不足栄養を補う おすすめ副菜・汁物
+      </div>
+      <div id="suggestContent">
+        <div class="suggest-loading">
+          <span class="spinner" style="width:14px;height:14px;"></span>AIが提案を生成中…
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- メモ＆アクション -->
+  <section class="panel fade-in">
+    <h3><span class="icon gold">📝</span>今日のメモ</h3>
+    <div class="field">
+      <label>味・家族の反応・次回への覚え書き</label>
+      <textarea class="textarea" id="cookNote" placeholder="例: 子どもが完食！次は辛さを控える"></textarea>
+    </div>
+  </section>
+
+  <div class="action-bar">
+    <button class="btn btn-cook" id="cookToday" type="button" disabled>✅ この献立を作る → 買い物リストへ</button>
+    <button class="btn secondary" id="favToggle" type="button" style="flex:0;padding:10px 14px;">☆</button>
+  </div>
+
+  <!-- 戻るリンク（スペース確保） -->
+  <div style="padding:10px 0 6px;">
+    <a class="btn ghost" href="menu.html" style="width:100%;display:flex;justify-content:center;">← 献立一覧に戻る</a>
+  </div>
+  
+  <!-- 副菜レシピモーダル -->
+  <div class="modal-overlay" id="sideDishModal">
+    <div class="modal-content">
+      <button class="modal-close" id="closeSideDishModal">&times;</button>
+      <h3 style="font-family:var(--font-serif);font-size:18px;margin-bottom:12px;line-height:1.3;" id="sideDishTitle"></h3>
+      <div id="sideDishBody"></div>
+    </div>
+  </div>
+</main>
+
+<nav class="nav">
+  <a href="index.html"><span class="nav-icon">🏠</span><span class="nav-label">ホーム</span></a>
+  <a href="profile.html"><span class="nav-icon">👨‍👩‍👧</span><span class="nav-label">プロフィール</span></a>
+  <a href="menu.html"><span class="nav-icon">🍽️</span><span class="nav-label">献立</span></a>
+  <a class="active" href="recipe.html"><span class="nav-icon">📋</span><span class="nav-label">レシピ</span></a>
+  <a href="shopping.html"><span class="nav-icon">🛒</span><span class="nav-label">買い物</span></a>
+  <a href="history.html"><span class="nav-icon">📖</span><span class="nav-label">記録</span></a>
+</nav>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

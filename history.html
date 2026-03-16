@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>食事の記録 | 献立コンシェルジュ</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon.svg" />
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="logo">📖</div>
+      <div>
+        <div class="brand-title">食事の記録</div>
+        <div class="brand-sub">作った履歴が次回提案に反映されます</div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="panel fade-in">
+      <h3><span class="icon orange">📅</span>最近作った献立</h3>
+      <div class="menu-list" id="historyList">
+        <div class="loading"><div class="spinner"></div>読み込み中...</div>
+      </div>
+    </section>
+
+    <section class="panel fade-in">
+      <h3><span class="icon green">💡</span>記録について</h3>
+      <div class="notice">
+        <span>📌</span>
+        <span>過去3回の記録は献立提案から除外され、食事のバリエーションが自動的に広がります。レシピページのメモも記録に残ります。</span>
+      </div>
+    </section>
+  </main>
+
+  <nav class="nav">
+    <a href="index.html"><span class="nav-icon">🏠</span><span class="nav-label">ホーム</span></a>
+    <a href="profile.html"><span class="nav-icon">👨‍👩‍👧</span><span class="nav-label">プロフィール</span></a>
+    <a href="menu.html"><span class="nav-icon">🍽️</span><span class="nav-label">献立</span></a>
+    <a href="shopping.html"><span class="nav-icon">🛒</span><span class="nav-label">買い物</span></a>
+    <a class="active" href="history.html"><span class="nav-icon">📖</span><span class="nav-label">記録</span></a>
+  </nav>
+
+  <script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
